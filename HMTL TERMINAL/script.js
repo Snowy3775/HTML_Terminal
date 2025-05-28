@@ -2880,7 +2880,11 @@ function checkUpdatesHandler() {
         if (remoteVersion.trim() === localVersion) {
           // Fetch and check file contents
           return Promise.all(Object.entries(filesToCheck).map(([fileName, fileUrl]) => 
-            fetch(fileUrl).then(res => res.text()).then(content => ({ fileName, content }))
+            fetch(fileUrl)
+              .then(res => {
+                if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                return res.text().then(content => ({ fileName, content }));
+              })
           ));
         } else {
           appendOutput(activeTabIdLocal, "Warning: Version mismatch. Do you want to update?", "warning");
@@ -2888,31 +2892,38 @@ function checkUpdatesHandler() {
         }
       })
       .then(fileContents => {
-        const localHtml = document.querySelector('html').innerHTML; // Your local HTML content
-        const localCss = `/* Your styles.css content here */`; // Update with your local styles.css content
-        const localJs = `// Your script.js content here`; // Update with your local script.js content
+        // Fetch local content
+        return Promise.all([
+          fetch("index.html").then(res => res.text()),
+          fetch("styles.css").then(res => res.text()),
+          fetch("script.js").then(res => res.text())
+        ]).then(localContents => {
+          const localHtml = localContents[0]; // local index.html content
+          const localCss = localContents[1];  // local styles.css content
+          const localJs = localContents[2];   // local script.js content
 
-        let allFilesMatch = true;
+          let allFilesMatch = true;
 
-        fileContents.forEach(({ fileName, content }) => {
-          switch (fileName) {
-            case "index.html":
-              if (content !== localHtml) allFilesMatch = false;
-              break;
-            case "styles.css":
-              if (content !== localCss) allFilesMatch = false;
-              break;
-            case "script.js":
-              if (content !== localJs) allFilesMatch = false;
-              break;
+          fileContents.forEach(({ fileName, content }) => {
+            switch (fileName) {
+              case "index.html":
+                if (content !== localHtml) allFilesMatch = false;
+                break;
+              case "styles.css":
+                if (content !== localCss) allFilesMatch = false;
+                break;
+              case "script.js":
+                if (content !== localJs) allFilesMatch = false;
+                break;
+            }
+          });
+
+          if (allFilesMatch) {
+            appendOutput(activeTabIdLocal, "You are on the correct version.", "success");
+          } else {
+            appendOutput(activeTabIdLocal, "Warning: Some file content(s) do not match, but the version is correct.", "warning");
           }
         });
-
-        if (allFilesMatch) {
-          appendOutput(activeTabIdLocal, "You are on the correct version.", "success");
-        } else {
-          appendOutput(activeTabIdLocal, "Warning: Some files are missing, but the version matches.", "warning");
-        }
       })
       .catch(error => {
         appendOutput(activeTabIdLocal, `Error: ${error.message}`, "error");
