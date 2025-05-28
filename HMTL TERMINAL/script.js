@@ -2888,7 +2888,6 @@ function checkUpdatesHandler() {
           ));
         } else {
           appendOutput(activeTabIdLocal, "Warning: Version mismatch. Do you want to update?", "warning");
-          throw new Error("Version mismatch");
         }
       })
       .then(fileContents => {
