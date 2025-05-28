@@ -2860,42 +2860,58 @@ function checkUpdatesHandler() {
   if (activeTabIdLocal) {
     appendOutput(activeTabIdLocal, "Checking for updates...");
 
-    // URL to fetch from GitHub
-    const githubUrl = "https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/version.txt"; // Update with your GitHub details
+    // URLs to fetch from GitHub
+    const versionUrl = "https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/version.txt";
+    const filesToCheck = {
+      "index.html": "https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/index.html",
+      "styles.css": "https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/styles.css",
+      "script.js": "https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/script.js"
+    };
 
-    // Fetch the version and content from GitHub
-    fetch(githubUrl)
+    // Fetch the version
+    fetch(versionUrl)
       .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         return response.text();
       })
-      .then(versionData => {
-        const remoteVersion = versionData.trim();
+      .then(remoteVersion => {
         const localVersion = "2.5.0"; // Your local version
 
-        // Check if the versions match
-        if (remoteVersion === localVersion) {
-          // Fetch the files to check contents
-          return Promise.all([
-            fetch("https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/index.html").then(res => res.text()),
-            fetch("https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/styles.css").then(res => res.text()),
-            fetch("https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/script.js").then(res => res.text())
-          ]).then(([remoteHtml, remoteCss, remoteJs]) => {
-            // Compare contents
-            const localHtml = document.querySelector('html').innerHTML; // Replace with your local HTML content
-            const localCss = styles.css; // Replace with your local CSS content
-            const localJs = script.js; // Replace with your local JS content
-
-            if (remoteHtml === localHtml && remoteCss === localCss && remoteJs === localJs) {
-              appendOutput(activeTabIdLocal, "You are on the correct version.", "success");
-            } else {
-              appendOutput(activeTabIdLocal, "Warning: Some file content are missing, but the version matches.", "warning");
-            }
-          });
+        if (remoteVersion.trim() === localVersion) {
+          // Fetch and check file contents
+          return Promise.all(Object.entries(filesToCheck).map(([fileName, fileUrl]) => 
+            fetch(fileUrl).then(res => res.text()).then(content => ({ fileName, content }))
+          ));
         } else {
           appendOutput(activeTabIdLocal, "Warning: Version mismatch. Do you want to update?", "warning");
+          throw new Error("Version mismatch");
+        }
+      })
+      .then(fileContents => {
+        const localHtml = document.querySelector('html').innerHTML; // Your local HTML content
+        const localCss = `/* Your styles.css content here */`; // Update with your local styles.css content
+        const localJs = `// Your script.js content here`; // Update with your local script.js content
+
+        let allFilesMatch = true;
+
+        fileContents.forEach(({ fileName, content }) => {
+          switch (fileName) {
+            case "index.html":
+              if (content !== localHtml) allFilesMatch = false;
+              break;
+            case "styles.css":
+              if (content !== localCss) allFilesMatch = false;
+              break;
+            case "script.js":
+              if (content !== localJs) allFilesMatch = false;
+              break;
+          }
+        });
+
+        if (allFilesMatch) {
+          appendOutput(activeTabIdLocal, "You are on the correct version.", "success");
+        } else {
+          appendOutput(activeTabIdLocal, "Warning: Some files are missing, but the version matches.", "warning");
         }
       })
       .catch(error => {
