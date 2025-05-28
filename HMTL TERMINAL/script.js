@@ -2861,7 +2861,7 @@ function checkUpdatesHandler() {
     appendOutput(activeTabIdLocal, "Checking for updates...");
 
     // URL to fetch from GitHub
-    const githubUrl = "https://raw.githubusercontent.com/username/repo/branch/version.txt"; // Update with your GitHub details
+    const githubUrl = "https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/version.txt"; // Update with your GitHub details
 
     // Fetch the version and content from GitHub
     fetch(githubUrl)
@@ -2879,9 +2879,9 @@ function checkUpdatesHandler() {
         if (remoteVersion === localVersion) {
           // Fetch the files to check contents
           return Promise.all([
-            fetch("https://raw.githubusercontent.com/username/repo/branch/index.html").then(res => res.text()),
-            fetch("https://raw.githubusercontent.com/username/repo/branch/styles.css").then(res => res.text()),
-            fetch("https://raw.githubusercontent.com/username/repo/branch/script.js").then(res => res.text())
+            fetch("https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/index.html").then(res => res.text()),
+            fetch("https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/styles.css").then(res => res.text()),
+            fetch("https://raw.githubusercontent.com/Snowy3775/HTML_Terminal/refs/heads/main/HMTL%20TERMINAL/script.js").then(res => res.text())
           ]).then(([remoteHtml, remoteCss, remoteJs]) => {
             // Compare contents
             const localHtml = document.querySelector('html').innerHTML; // Replace with your local HTML content
